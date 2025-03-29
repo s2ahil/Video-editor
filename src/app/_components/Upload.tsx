@@ -1,17 +1,13 @@
 "use client";
 import { useState } from "react";
-import { Group, Text} from "@mantine/core";
+import { Group, Text, Loader } from "@mantine/core";
 import { IconUpload, IconX, IconCloudUp } from "@tabler/icons-react";
 import { Dropzone, DropzoneProps, IMAGE_MIME_TYPE, MIME_TYPES } from "@mantine/dropzone";
 import "@mantine/dropzone/styles.css";
 
-
 function UploadComponent({ onUploadSuccess, ...props }: Partial<DropzoneProps> & { onUploadSuccess: () => void }) {
-  // const [media, setMedia] = useState<File | null>(null);
-  // const [preview, setPreview] = useState<string | null>(null);
   const [uploadedUrl, setUploadedUrl] = useState<string | null>(null);
-
-
+  const [isLoading, setIsLoading] = useState(false); // Loading state
 
   // Generate unique filename
   const generateUniqueName = (file: File) => {
@@ -23,12 +19,9 @@ function UploadComponent({ onUploadSuccess, ...props }: Partial<DropzoneProps> &
     const file = files[0];
     if (!file) return;
 
- 
+    setIsLoading(true); // Start loading
+
     const uniqueFileName = generateUniqueName(file);
-
-    // const objectURL = URL.createObjectURL(file);
-  
-
     const formData = new FormData();
     formData.append("file", file);
     formData.append("customName", uniqueFileName);
@@ -43,13 +36,14 @@ function UploadComponent({ onUploadSuccess, ...props }: Partial<DropzoneProps> &
       if (res.ok) {
         setUploadedUrl(data.url);
         onUploadSuccess();
-        // fetchMedia(); // Refresh media list after upload
         alert("File uploaded successfully!");
       } else {
         console.error("Upload failed:", data.error);
       }
     } catch (error) {
       console.error("Error uploading file:", error);
+    } finally {
+      setIsLoading(false); // Stop loading
     }
   };
 
@@ -62,6 +56,7 @@ function UploadComponent({ onUploadSuccess, ...props }: Partial<DropzoneProps> &
         accept={[...IMAGE_MIME_TYPE, MIME_TYPES.mp4]}
         {...props}
         className="text-center"
+        disabled={isLoading} // Disable while uploading
       >
         <Group justify="center" gap="xl" mih={220} style={{ pointerEvents: "none" }}>
           <Dropzone.Accept>
@@ -76,7 +71,7 @@ function UploadComponent({ onUploadSuccess, ...props }: Partial<DropzoneProps> &
 
           <div>
             <Text size="xl" inline className="text-center">
-              Upload a file
+              {isLoading ? "Uploading..." : "Upload a file"}
             </Text>
             <Text size="sm" inline mt={7} className="underline text-blue-700">
               Attach a photo or video (max 5MB)
@@ -85,7 +80,13 @@ function UploadComponent({ onUploadSuccess, ...props }: Partial<DropzoneProps> &
         </Group>
       </Dropzone>
 
-     
+      {/* Show loading indicator */}
+      {isLoading && (
+        <Group justify="center" mt="md">
+          <Loader size="sm" color="blue" />
+          <Text size="sm">Uploading...</Text>
+        </Group>
+      )}
 
       {/* Show uploaded file link */}
       {uploadedUrl && (
@@ -96,25 +97,6 @@ function UploadComponent({ onUploadSuccess, ...props }: Partial<DropzoneProps> &
           </a>
         </Text>
       )}
-
-      {/* Clear media
-      {preview && (
-        <Button
-          variant="outline"
-          color="red"
-          mt="md"
-          onClick={() => {
-            setMedia(null);
-            setPreview(null);
-            setUploadedUrl(null);
-          }}
-        >
-          Remove Media
-        </Button>
-      )} */}
-
-      {/* Display Available Media */}
-     
     </div>
   );
 }
